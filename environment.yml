@@ -1,0 +1,13 @@
+name: SpotifAI
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - ipykernel
+  - pip
+  - pip:
+      - crewai
+      - ollama
+      - spotipy
+      - python-dotenv
+      - pydantic
