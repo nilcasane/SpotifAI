@@ -1,6 +1,7 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
+from spotifai.tools.spotify_tools import search_tracks, create_playlist
 
 @CrewBase
 class Spotifai():
@@ -16,7 +17,8 @@ class Spotifai():
     def music_searcher(self) -> Agent:
         return Agent(
             config=self.agents_config['music_searcher'], # type: ignore[index]
-            verbose=True
+            verbose=True,
+            tools=[search_tracks]
         )
 
     @agent
@@ -30,21 +32,23 @@ class Spotifai():
     def playlist_manager(self) -> Agent:
         return Agent(
             config=self.agents_config['playlist_manager'], # type: ignore[index]
-            verbose=True
+            verbose=True,
+            tools=[create_playlist]
         )
 
     @task
-    def research_task(self) -> Task:
+    def search_tracks_task(self) -> Task:
         return Task(
-            config=self.tasks_config['research_task'], # type: ignore[index]
+            config=self.tasks_config["search_tracks_task"],
         )
 
+    #@task
+    #def analyze_tracks_task(self) -> Task:
+    #    return Task(config=self.tasks_config["analyze_tracks_task"])
+
     @task
-    def reporting_task(self) -> Task:
-        return Task(
-            config=self.tasks_config['reporting_task'], # type: ignore[index]
-            output_file='report.md'
-        )
+    def create_playlist_task(self) -> Task:
+        return Task(config=self.tasks_config["create_playlist_task"])
 
     @crew
     def crew(self) -> Crew:

@@ -1,0 +1,40 @@
+### 1. Obtenir token de Spotify
+# @name getSpotifyToken
+POST https://accounts.spotify.com/api/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&client_id={{$dotenv SPOTIFY_CLIENT_ID}}&client_secret={{$dotenv SPOTIFY_CLIENT_SECRET}}
+
+### 2. Buscar cançons
+GET https://api.spotify.com/v1/search?q=track:Creep%20artist:Radiohead&type=track&market=ES&limit=5
+Authorization: Bearer {{getSpotifyToken.response.body.access_token}}
+
+
+### 3. Buscar artista
+GET https://api.spotify.com/v1/search?q=artist:Rosalia&type=artist&market=ES&limit=5
+Authorization: Bearer {{getSpotifyToken.response.body.access_token}}
+
+
+### 4. Obtenir dades d’una cançó concreta
+GET https://api.spotify.com/v1/tracks/70LcF31zb1H0PyJoS1Sx1r?market=ES
+Authorization: Bearer {{getSpotifyToken.response.body.access_token}}
+
+### 5. Obtenir característiques d’una cançó concreta
+GET https://api.spotify.com/v1/audio-features/70LcF31zb1H0PyJoS1Sx1r
+Authorization: Bearer {{getSpotifyToken.response.body.access_token}}
+
+### 6. Obtenir característiques de diverses cançons
+GET https://api.spotify.com/v1/audio-features?ids=70LcF31zb1H0PyJoS1Sx1r,70LcF31zb1H0PyJoS1Sx1r
+Authorization: Bearer {{getSpotifyToken.response.body.access_token}}
+
+### 7. Obtenir cançons semblants
+GET https://api.spotify.com/v1/recommendations?seed_artists=6M2wZ7bQEN5HaQ73Tw vời
+Authorization: Bearer {{getSpotifyToken.response.body.access_token}}
+
+### 8. Obtenir dades de l'usuari
+GET https://api.spotify.com/v1/me
+Authorization: Bearer {{getSpotifyToken.response.body.access_token}}
+
+### 9. Obtenir playlists de l'usuari
+GET https://api.spotify.com/v1/me/playlists
+Authorization: Bearer {{getSpotifyToken.response.body.access_token}}

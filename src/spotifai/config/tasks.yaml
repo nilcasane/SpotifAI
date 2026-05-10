@@ -1,17 +1,30 @@
-research_task:
+search_tracks_task:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
-  expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+    Search for candidate songs on Spotify based on the user request:
+    {user_request}
 
-reporting_task:
-  description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    Find more songs than needed so they can be filtered later.
+    Return songs with name, artist, Spotify ID, and a short reason.
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+    A list of candidate songs with name, artist, Spotify ID, and reason
+    for selection.
+  agent: music_searcher
+
+technical_analyst_task:
+  description: >
+    Analyzes the technical characteristics of the songs found by the music_searcher agent.
+    Filters out songs that do not meet the user's criteria.
+  expected_output: >
+    A list of songs that meet the user's criteria.
+  agent: technical_analyst
+
+create_playlist_task:
+  description: >
+    Create a Spotify playlist using the approved songs.
+
+    The playlist must have a clear name, a short description, and contain
+    only the songs approved by the technical analyst.
+  expected_output: >
+    The Spotify playlist URL and a final summary with the songs added.
+  agent: playlist_manager
+  output_file: outputs/playlist_summary.md
