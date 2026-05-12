@@ -6,16 +6,15 @@ search_tracks_task:
     If the user mentions an artist name (e.g. "Queen"), search ONLY for songs
     by that artist. Do NOT search for unrelated songs or other artists.
 
-    Search a maximum of 10 songs.
+    Search between 10 and 20 songs.
 
     Use the "Search tracks on Spotify" tool to find songs. Make only ONE request. Pass the user request
     directly as a plain text query string (e.g. "Queen"). Do NOT use JSON format.
 
     Return each song with: name, artist, Spotify ID.
   expected_output: >
-    A list of songs that strictly match the user request, each with name,
-    artist and Spotify ID.
-  agent: music_searcher
+    A list of songs with name, artist and Spotify ID.
+  agent: manager
   output_file: outputs/songs_list.md
 
 technical_analyst_task:
@@ -24,20 +23,33 @@ technical_analyst_task:
     Filters out songs that do not meet the user's criteria.
   expected_output: >
     A list of songs that meet the user's criteria.
-  agent: technical_analyst
+  agent: manager
 
 create_playlist_task:
   description: >
-    Create a Spotify playlist and add all the songs from the previous task.
-
-    Use the "Create playlist and add tracks on Spotify" tool exactly ONCE.
-    Pass two parameters:
+    Create an empty Spotify playlist using the "Create playlist on Spotify" tool.
+    
+    You MUST execute the tool exactly ONCE.
+    Pass one parameter:
       - name: a descriptive playlist name (plain text string)
-      - track_ids: all Spotify track IDs separated by commas, no spaces
-        Example: "6rqhFgbbKwnb9MLmUQDhG6,4u7EnebtB2gSQ7sXFoGx8V"
-
-    Extract the track IDs from the previous task output.
+    
+    You will receive a PLAYLIST_ID. Return this PLAYLIST_ID as your final answer.
   expected_output: >
-    The Spotify playlist URL and a summary of the songs added.
+    The Playlist ID of the newly created playlist.
   agent: playlist_manager
+
+add_tracks_task:
+  description: >
+    Add tracks to the playlist created in the previous task.
+    
+    Use the "Add tracks to playlist on Spotify" tool exactly ONCE.
+    Pass two parameters:
+      - playlist_id: the exact Playlist ID returned from the previous task.
+      - track_ids: all Spotify track IDs from the search task, separated by commas, no spaces.
+        Example: "6rqhFgbbKwnb9MLmUQDhG6,4u7EnebtB2gSQ7sXFoGx8V"
+        
+    Extract the track IDs from the initial search output.
+  expected_output: >
+    A summary of the songs added to the playlist.
+  agent: manager
   output_file: outputs/playlist_summary.md

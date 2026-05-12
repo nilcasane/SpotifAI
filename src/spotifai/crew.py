@@ -1,7 +1,7 @@
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from spotifai.tools.spotify_tools import search_tracks, create_playlist_with_tracks
+from spotifai.tools.spotify_tools import search_tracks, create_playlist, add_tracks_to_playlist
 
 @CrewBase
 class Spotifai():
@@ -15,8 +15,18 @@ class Spotifai():
 
     llm_local = LLM(
         model="ollama/llama3.2",
-        base_url="http://localhost:11434" # Port per defecte de Llama3
+        base_url="http://localhost:11434",
+        timeout=120
     )
+
+    @agent
+    def manager(self) -> Agent:
+        return Agent(
+            config=self.agents_config['manager'], # type: ignore[index]
+            verbose=True,
+            allow_delegation=True,
+            llm=self.llm_local
+        )
 
     @agent
     def music_searcher(self) -> Agent:
@@ -24,8 +34,8 @@ class Spotifai():
             config=self.agents_config['music_searcher'], # type: ignore[index]
             verbose=True,
             tools=[search_tracks],
-            llm=self.llm_local,
-            max_iter=1
+            max_iter=1,
+            llm=self.llm_local
         )
 
     @agent
@@ -41,9 +51,9 @@ class Spotifai():
         return Agent(
             config=self.agents_config['playlist_manager'], # type: ignore[index]
             verbose=True,
-            tools=[create_playlist_with_tracks],
-            llm=self.llm_local,
-            max_iter=1
+            tools=[create_playlist, add_tracks_to_playlist],
+            max_iter=2,
+            llm=self.llm_local
         )
 
     @task
@@ -58,7 +68,16 @@ class Spotifai():
 
     @task
     def create_playlist_task(self) -> Task:
-        return Task(config=self.tasks_config["create_playlist_task"])
+        return Task(
+            config=self.tasks_config["create_playlist_task"]
+        )
+
+    @task
+    def add_tracks_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["add_tracks_task"],
+            context=[self.search_tracks_task(), self.create_playlist_task()]
+        )
 
     @crew
     def crew(self) -> Crew:
@@ -66,8 +85,9 @@ class Spotifai():
         return Crew(
             agents=self.agents, # Automatically created by the @agent decorator
             tasks=self.tasks, # Automatically created by the @task decorator
-            process=Process.sequential,
+            #process=Process.sequential,
             verbose=True,
             tracing=True,
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
+            process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
+            manager_agent=self.manager(),
         )
