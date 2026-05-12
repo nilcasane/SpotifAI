@@ -1,4 +1,4 @@
-from crewai import Agent, Crew, Process, Task
+from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from spotifai.tools.spotify_tools import search_tracks, create_playlist
@@ -13,19 +13,27 @@ class Spotifai():
     agents: list[BaseAgent]
     tasks: list[Task]
 
+llm_local = LLM(
+    model="ollama/llama3.2",
+    base_url="http://localhost:11434" # Port per defecte de Llama3
+)
     @agent
     def music_searcher(self) -> Agent:
         return Agent(
             config=self.agents_config['music_searcher'], # type: ignore[index]
             verbose=True,
-            tools=[search_tracks]
+            tools=[search_tracks],
+            llm=llm_local # Llama3.2
+)
         )
 
     @agent
     def technical_analyst(self) -> Agent:
         return Agent(
             config=self.agents_config['technical_analyst'], # type: ignore[index]
-            verbose=True
+            verbose=True,
+            llm=llm_local # Llama3.2
+)
         )
 
     @agent
@@ -33,7 +41,9 @@ class Spotifai():
         return Agent(
             config=self.agents_config['playlist_manager'], # type: ignore[index]
             verbose=True,
-            tools=[create_playlist]
+            tools=[create_playlist],
+            llm=llm_local # Llama3.2
+)
         )
 
     @task
