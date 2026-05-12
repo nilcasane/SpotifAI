@@ -1,7 +1,7 @@
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from spotifai.tools.spotify_tools import search_tracks, create_playlist
+from spotifai.tools.spotify_tools import search_tracks, create_playlist_with_tracks
 
 @CrewBase
 class Spotifai():
@@ -24,7 +24,8 @@ class Spotifai():
             config=self.agents_config['music_searcher'], # type: ignore[index]
             verbose=True,
             tools=[search_tracks],
-            llm=self.llm_local
+            llm=self.llm_local,
+            max_iter=1
         )
 
     @agent
@@ -40,8 +41,9 @@ class Spotifai():
         return Agent(
             config=self.agents_config['playlist_manager'], # type: ignore[index]
             verbose=True,
-            tools=[create_playlist],
-            llm=self.llm_local
+            tools=[create_playlist_with_tracks],
+            llm=self.llm_local,
+            max_iter=1
         )
 
     @task
@@ -66,5 +68,6 @@ class Spotifai():
             tasks=self.tasks, # Automatically created by the @task decorator
             process=Process.sequential,
             verbose=True,
+            tracing=True,
             # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )

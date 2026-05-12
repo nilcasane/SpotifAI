@@ -18,7 +18,7 @@ def run():
     Run the crew.
     """
     inputs = {
-        "user_request": "Create an alternative rock playlist with songs from the 90s."
+        "user_request": "Queen"
     }
 
     try:
@@ -32,7 +32,7 @@ def train():
     Train the crew for a given number of iterations.
     """
     inputs = {
-        "user_request": "Create an alternative rock playlist with songs from the 90s."
+        "user_request": "Queen"
     }
     try:
         Spotifai().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
@@ -55,7 +55,7 @@ def test():
     Test the crew execution and returns the results.
     """
     inputs = {
-        "user_request": "Create an alternative rock playlist with songs from the 90s."
+        "user_request": "Queen"
     }
 
     try:
@@ -79,7 +79,7 @@ def run_with_trigger():
         raise Exception("Invalid JSON payload provided as argument")
 
     inputs = {
-        "user_request": "Create a playlist of 5 songs by Queen"
+        "user_request": "Queen"
     }
 
     try:

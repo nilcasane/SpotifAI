@@ -22,7 +22,7 @@ playlist_manager:
   role: >
     Spotify playlist manager
   goal: >
-    Create the final playlist on Spotify with the approved songs and return
+    Create the final playlist on Spotify with the songs and return
     a clear summary with the playlist URL and the added songs.
   backstory: >
     You are responsible for creating a coherent Spotify playlist and

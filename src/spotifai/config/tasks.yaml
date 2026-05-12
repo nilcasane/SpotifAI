@@ -1,18 +1,22 @@
 search_tracks_task:
   description: >
-    Search for candidate songs on Spotify based on the user request:
-    {user_request}
+    The user request is: {user_request}
 
-    Find more songs than needed so they can be filtered later.
-    Return songs with name, artist, Spotify ID, and a short reason.
+    You MUST search for songs that strictly match the user request above.
+    If the user mentions an artist name (e.g. "Queen"), search ONLY for songs
+    by that artist. Do NOT search for unrelated songs or other artists.
 
-    IMPORTANT: When calling the "Search tracks on Spotify" tool, pass a plain
-    text search string as the query. Do NOT wrap the query in JSON or add keys like "type". 
-    Just pass the search keywords directly as a simple string.
+    Search a maximum of 10 songs.
+
+    Use the "Search tracks on Spotify" tool to find songs. Make only ONE request. Pass the user request
+    directly as a plain text query string (e.g. "Queen"). Do NOT use JSON format.
+
+    Return each song with: name, artist, Spotify ID.
   expected_output: >
-    A list of candidate songs with name, artist, Spotify ID, and reason
-    for selection.
+    A list of songs that strictly match the user request, each with name,
+    artist and Spotify ID.
   agent: music_searcher
+  output_file: outputs/songs_list.md
 
 technical_analyst_task:
   description: >
@@ -24,11 +28,16 @@ technical_analyst_task:
 
 create_playlist_task:
   description: >
-    Create a Spotify playlist using the approved songs.
+    Create a Spotify playlist and add all the songs from the previous task.
 
-    The playlist must have a clear name, a short description, and contain
-    only the songs approved by the technical analyst.
+    Use the "Create playlist and add tracks on Spotify" tool exactly ONCE.
+    Pass two parameters:
+      - name: a descriptive playlist name (plain text string)
+      - track_ids: all Spotify track IDs separated by commas, no spaces
+        Example: "6rqhFgbbKwnb9MLmUQDhG6,4u7EnebtB2gSQ7sXFoGx8V"
+
+    Extract the track IDs from the previous task output.
   expected_output: >
-    The Spotify playlist URL and a final summary with the songs added.
+    The Spotify playlist URL and a summary of the songs added.
   agent: playlist_manager
   output_file: outputs/playlist_summary.md
