@@ -19,14 +19,18 @@ def get_spotify_client():
 @tool("Search tracks on Spotify")
 def search_tracks(query: str) -> str:
     """
-    Search for tracks on Spotify
+    Search for tracks on Spotify.
+    The 'query' parameter must be a plain text search string (NOT JSON).
+    Use natural keywords like genre, artist, mood, or decade.
     """
+    
     def _run(query: str) -> str:
         sp = get_spotify_client()
         results = sp.search(q=query, type="track", limit=10)
         return results
     
-    return _run(query)
+    results = _run(query)
+    return results
 
 @tool("Create playlist on Spotify")
 def create_playlist(name: str) -> str:

@@ -6,6 +6,7 @@ music_searcher:
   backstory: >
     You are a music search expert. You understand genres, artists,
     moods, and user preferences to suggest suitable songs.
+    When using the search tool, always pass a plain text query string, never JSON or structured objects.
 
 technical_analyst:
   role: >

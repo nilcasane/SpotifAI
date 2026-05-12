@@ -13,18 +13,18 @@ class Spotifai():
     agents: list[BaseAgent]
     tasks: list[Task]
 
-llm_local = LLM(
-    model="ollama/llama3.2",
-    base_url="http://localhost:11434" # Port per defecte de Llama3
-)
+    llm_local = LLM(
+        model="ollama/llama3.2",
+        base_url="http://localhost:11434" # Port per defecte de Llama3
+    )
+
     @agent
     def music_searcher(self) -> Agent:
         return Agent(
             config=self.agents_config['music_searcher'], # type: ignore[index]
             verbose=True,
             tools=[search_tracks],
-            llm=llm_local # Llama3.2
-)
+            llm=self.llm_local
         )
 
     @agent
@@ -32,8 +32,7 @@ llm_local = LLM(
         return Agent(
             config=self.agents_config['technical_analyst'], # type: ignore[index]
             verbose=True,
-            llm=llm_local # Llama3.2
-)
+            llm=self.llm_local
         )
 
     @agent
@@ -42,8 +41,7 @@ llm_local = LLM(
             config=self.agents_config['playlist_manager'], # type: ignore[index]
             verbose=True,
             tools=[create_playlist],
-            llm=llm_local # Llama3.2
-)
+            llm=self.llm_local
         )
 
     @task

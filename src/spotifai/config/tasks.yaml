@@ -5,6 +5,10 @@ search_tracks_task:
 
     Find more songs than needed so they can be filtered later.
     Return songs with name, artist, Spotify ID, and a short reason.
+
+    IMPORTANT: When calling the "Search tracks on Spotify" tool, pass a plain
+    text search string as the query. Do NOT wrap the query in JSON or add keys like "type". 
+    Just pass the search keywords directly as a simple string.
   expected_output: >
     A list of candidate songs with name, artist, Spotify ID, and reason
     for selection.

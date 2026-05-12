@@ -79,7 +79,7 @@ def run_with_trigger():
         raise Exception("Invalid JSON payload provided as argument")
 
     inputs = {
-        "user_request": "Create an alternative rock playlist with songs from the 90s."
+        "user_request": "Create a playlist of 5 songs by Queen"
     }
 
     try:
