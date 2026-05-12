@@ -1,1 +1,1 @@
-{"name": "Add tracks to playlist on Spotify", "parameters": {"playlist_id": "{spotify_api_output_from_previous_task}", "track_ids": "[track_ids_from_initial_search]"}}
+{"name": "add_tracks_task", "parameters": {"track_ids": "6rqhFgbbKwnb9MLmUQDhG6,4u7EnebtB2gSQ7sXFoGx8V", "playlist_id": "{\"type\":\"string\",\"description\":\"The ID returned by the Create playlist on Spotify tool\"}"}}

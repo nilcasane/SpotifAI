@@ -1,75 +1,37 @@
 #!/usr/bin/env python
+from pathlib import Path
+import json
 import sys
-import warnings
 
-from datetime import datetime
+from crewai.flow import Flow
 
-from spotifai.crew import Spotifai
+from spotifai.flows.spotifai_flow import SpotifAIFlow
 
-warnings.filterwarnings("ignore", category=SyntaxWarning, module="pysbd")
 
-# This main file is intended to be a way for you to run your
-# crew locally, so refrain from adding unnecessary logic into this file.
-# Replace with inputs you want to test with, it will automatically
-# interpolate any tasks and agents information
+def kickoff(crewai_trigger_payload: dict | None = None):
+    """Instantiate and run the SpotifAI Flow.
 
-def run():
+    If `crewai_trigger_payload` is provided it will be forwarded to the
+    Flow's @start() method (this matches the pattern used by CrewAI flows).
     """
-    Run the crew.
-    """
-    inputs = {
-        "user_request": "Queen"
-    }
+    flow = SpotifAIFlow()
+    if crewai_trigger_payload:
+        return flow.kickoff({"crewai_trigger_payload": crewai_trigger_payload})
 
-    try:
-        Spotifai().crew().kickoff(inputs=inputs)
-    except Exception as e:
-        raise Exception(f"An error occurred while running the crew: {e}")
+    # Default quick-run payload for local testing
+    return flow.kickoff({"crewai_trigger_payload": {"user_request": "Queen"}})
 
 
-def train():
-    """
-    Train the crew for a given number of iterations.
-    """
-    inputs = {
-        "user_request": "Queen"
-    }
-    try:
-        Spotifai().crew().train(n_iterations=int(sys.argv[1]), filename=sys.argv[2], inputs=inputs)
+def plot():
+    flow = SpotifAIFlow()
+    flow.plot()
 
-    except Exception as e:
-        raise Exception(f"An error occurred while training the crew: {e}")
-
-def replay():
-    """
-    Replay the crew execution from a specific task.
-    """
-    try:
-        Spotifai().crew().replay(task_id=sys.argv[1])
-
-    except Exception as e:
-        raise Exception(f"An error occurred while replaying the crew: {e}")
-
-def test():
-    """
-    Test the crew execution and returns the results.
-    """
-    inputs = {
-        "user_request": "Queen"
-    }
-
-    try:
-        Spotifai().crew().test(n_iterations=int(sys.argv[1]), eval_llm=sys.argv[2], inputs=inputs)
-
-    except Exception as e:
-        raise Exception(f"An error occurred while testing the crew: {e}")
 
 def run_with_trigger():
-    """
-    Run the crew with trigger payload.
-    """
-    import json
+    """Run the flow with a trigger payload passed on the command line.
 
+    Usage: python -m spotifai.main run_with_trigger '{"user_request": "Chill workout"}'
+    """
     if len(sys.argv) < 2:
         raise Exception("No trigger payload provided. Please provide JSON payload as argument.")
 
@@ -78,12 +40,8 @@ def run_with_trigger():
     except json.JSONDecodeError:
         raise Exception("Invalid JSON payload provided as argument")
 
-    inputs = {
-        "user_request": "Queen"
-    }
+    return kickoff(trigger_payload)
 
-    try:
-        result = Spotifai().crew().kickoff(inputs=inputs)
-        return result
-    except Exception as e:
-        raise Exception(f"An error occurred while running the crew with trigger: {e}")
+
+if __name__ == "__main__":
+    kickoff()

@@ -1,0 +1,26 @@
+search_tracks_task:
+  description: >
+    The user request is: {user_request}
+
+    You MUST search for songs that strictly match the user request above.
+    If the user mentions an artist name (e.g. "Queen"), search ONLY for songs
+    by that artist. Do NOT search for unrelated songs or other artists.
+
+    Search between 10 and 20 songs.
+
+    Use the "Search tracks on Spotify" tool to find songs. Make only ONE request. Pass the user request
+    directly as a plain text query string (e.g. "Queen"). Do NOT use JSON format.
+
+    Return each song with: name, artist, Spotify ID.
+  expected_output: >
+    A list of songs with name, artist and Spotify ID.
+  agent: music_searcher
+  output_file: outputs/songs_list.md
+
+technical_analyst_task:
+  description: >
+    Analyzes the technical characteristics of the songs found by the music_searcher agent.
+    Filters out songs that do not meet the user's criteria.
+  expected_output: >
+    A list of songs that meet the user's criteria.
+  agent: technical_analyst

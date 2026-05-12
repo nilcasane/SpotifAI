@@ -1,1 +1,1 @@
-{"name": "Search tracks on Spotify", "parameters": {"context": "{\"type\":\"string\",\"description\":\"Search for songs by Queen using Spotify API\",\"query\":\"Queen\"}"}}
+{"name": "analyze_tool_result", "parameters": {"context": "{\"type\": \"string\", \"description\" : \"The context for the task\"}", "coworker": "spotify music searcher", "question": "What are some songs by the artist Queen who also match the genre of rock or musical rock?"}}
