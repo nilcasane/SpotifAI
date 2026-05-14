@@ -1,18 +1,53 @@
+plan_music_search_task:
+  description: >
+    Analyze the following user request:
+
+    "{user_request}"
+
+    Previous feedback from earlier attempts, if any:
+    "{previous_feedback}"
+
+    Previously approved tracks, if any:
+    "{previous_tracks}"
+
+    Your task is to create a structured Spotify search plan.
+
+    You must:
+    1. Identify the user's main goal.
+    2. Suggest a suitable playlist name.
+    3. Determine the target number of songs. If the user does not specify a number, use 20.
+    4. Infer relevant genres.
+    5. Infer moods and energy level.
+    6. Infer BPM, energy or valence constraints only if they are clearly implied.
+    7. Generate multiple concrete plain-text Spotify search queries.
+    8. If previous feedback exists, improve the search strategy instead of repeating the same queries.
+
+    Important rules:
+    - Do not invent songs.
+    - Do not invent Spotify track IDs.
+    - Do not call Spotify tools.
+    - Do not create the playlist.
+    - Focus only on planning the search.
+    - Each search query must be a plain text query suitable for the Spotify search tool.
+    - Do not return Markdown.
+    - Do not wrap the answer in code fences.
+  expected_output: >
+    A MusicSearchPlan object with playlist_name, user_goal, target_tracks,
+    genres, moods, keywords, search_queries, optional technical constraints,
+    avoid, and explanation.
+  agent: music_query_planner
+
 search_tracks_task:
   description: >
-    The user request is: {user_request}
-    Previous feedback, if any: {previous_feedback}
-    Previously approved tracks, if any: {previous_tracks}
+    Use the structured MusicSearchPlan produced in the previous task to guide your searches.
 
-    You MUST search for songs that strictly match the user request above.
-    If the user mentions an artist name (e.g. "Queen"), search ONLY for songs
-    by that artist. Do NOT search for unrelated songs or other artists.
+    Execute searches using the search_queries from the plan. Use the "Search tracks on Spotify" tool.
+    Tool inputs must always be plain text query strings, never JSON or structured objects.
 
-    Search between 10 and 20 songs.
+    Search enough candidates to return a DiscoveryResult. Only include track IDs returned by the tool.
+    Do not invent, modify, or add Spotify track IDs.
 
-    Use the "Search tracks on Spotify" tool to find songs. Make only ONE request. Pass the user request
-    directly as a plain text query string (e.g. "Queen"). Do NOT use JSON format.
-    Only include track IDs that were returned by the tool. Do not invent, modify, or add track IDs.
+    Return a DiscoveryResult with status, playlist_name, and approved_tracks.
   expected_output: >
     A DiscoveryResult with status, playlist_name, and approved_tracks list
     where each song is represented as a TrackResult (spotify_id, name, and artist).

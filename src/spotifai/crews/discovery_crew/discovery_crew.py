@@ -2,7 +2,7 @@ from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
 from spotifai.tools.spotify_tools import search_tracks, get_track_analysis
-from spotifai.models import DiscoveryResult
+from spotifai.models import MusicSearchPlan, DiscoveryResult
 
 
 @CrewBase
@@ -20,6 +20,17 @@ class DiscoveryCrew():
         base_url="http://localhost:11434",
         timeout=120
     )
+
+    @agent
+    def query_interpreter(self) -> Agent:
+        return Agent(
+            config=self.agents_config["query_interpreter"], # type: ignore[index]
+            verbose=True,
+            tools=[],
+            max_iter=2,
+            allow_delegation=False,
+            llm=self.llm_local,
+        )
 
     @agent
     def music_searcher(self) -> Agent:
@@ -41,9 +52,17 @@ class DiscoveryCrew():
         )
 
     @task
+    def plan_music_search_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["plan_music_search_task"], # type: ignore[index]
+            output_pydantic=MusicSearchPlan,
+        )
+
+    @task
     def search_tracks_task(self) -> Task:
         return Task(
             config=self.tasks_config["search_tracks_task"], # type: ignore[index]
+            context=[self.plan_music_search_task()],
             output_pydantic=DiscoveryResult,
         )
 

@@ -16,6 +16,24 @@ class DiscoveryResult(BaseModel):
     next_search_strategy: str = ""
 
 
+class MusicSearchPlan(BaseModel):
+    playlist_name: str
+    user_goal: str
+    target_tracks: int = 20
+    genres: list[str] = Field(default_factory=list)
+    moods: list[str] = Field(default_factory=list)
+    keywords: list[str] = Field(default_factory=list)
+    search_queries: list[str] = Field(default_factory=list)
+    min_bpm: int | None = None
+    max_bpm: int | None = None
+    min_energy: float | None = None
+    max_energy: float | None = None
+    min_valence: float | None = None
+    max_valence: float | None = None
+    avoid: list[str] = Field(default_factory=list)
+    explanation: str
+
+
 class PlaylistResult(BaseModel):
     status: Literal["DONE", "FAILED"]
     playlist_id: str | None = None
