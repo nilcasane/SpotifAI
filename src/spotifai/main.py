@@ -10,7 +10,7 @@ def run_flow(crewai_trigger_payload: dict | None = None):
         return flow.kickoff({"crewai_trigger_payload": crewai_trigger_payload})
 
     # Default quick-run payload for local testing
-    return flow.kickoff({"crewai_trigger_payload": {"user_request": "Queen"}})
+    return flow.kickoff({"crewai_trigger_payload": {"user_request": "Twenty One Pilots"}})
 
 def kickoff(crewai_trigger_payload: dict | None = None):
     """Console entry point used by `crewai run`."""

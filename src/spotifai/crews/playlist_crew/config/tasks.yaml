@@ -1,28 +1,19 @@
 create_playlist_task:
   description: >
-    Create an empty Spotify playlist using the "Create playlist on Spotify" tool.
-    Playlist name: {playlist_name}
-    
-    You MUST execute the tool exactly ONCE.
-    Pass one parameter:
-      - name: the exact playlist name above
-    
-    You will receive a PLAYLIST_ID. Return this PLAYLIST_ID as your final answer.
+    Create a Spotify playlist with the name: {playlist_name}.
+    You MUST use the "Create playlist on Spotify" tool exactly once.
+    The tool returns a PlaylistResult directly.
   expected_output: >
-    The Playlist ID of the newly created playlist.
+    The PlaylistResult with status, playlist_id, and playlist_url returned by the tool.
   agent: playlist_manager
 
 add_tracks_task:
   description: >
-    Add tracks to the playlist created in the previous task.
-    Track IDs to add: {track_ids}
-    
-    Use the "Add tracks to playlist on Spotify" tool exactly ONCE.
-    Pass two parameters:
-      - playlist_id: the exact Playlist ID returned from the previous task.
-      - track_ids: the exact Track IDs to add above.
-        Example: "6rqhFgbbKwnb9MLmUQDhG6,4u7EnebtB2gSQ7sXFoGx8V"
+    You will receive a PlaylistResult from the previous task, which includes the playlist_id and playlist_url.
+    Add to the playlist the following tracks: {track_ids}
+    You MUST use the "Add tracks to playlist on Spotify" tool exactly once, but only if the previous
+    task returned a valid playlist_id. The tool returns a PlaylistResult directly.
+    If the previous task returned FAILED or if playlist_id is missing, return status FAILED without calling the tool.
   expected_output: >
-    A summary of the songs added to the playlist.
+    A PlaylistResult with status, playlist_id, playlist_url, and the number of tracks added.
   agent: playlist_manager
-  output_file: outputs/playlist_summary.md

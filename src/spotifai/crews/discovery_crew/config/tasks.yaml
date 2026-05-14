@@ -12,12 +12,11 @@ search_tracks_task:
 
     Use the "Search tracks on Spotify" tool to find songs. Make only ONE request. Pass the user request
     directly as a plain text query string (e.g. "Queen"). Do NOT use JSON format.
-
-    Return each song with: name, artist, Spotify ID.
+    Only include track IDs that were returned by the tool. Do not invent, modify, or add track IDs.
   expected_output: >
-    A list of songs with name, artist and Spotify ID.
+    A DiscoveryResult with status, playlist_name, and approved_tracks list
+    where each song is represented as a TrackResult (spotify_id, name, and artist).
   agent: music_searcher
-  output_file: outputs/songs_list.md
 
 technical_analyst_task:
   description: >

@@ -1,7 +1,9 @@
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from spotifai.tools.spotify_tools import search_tracks
+from spotifai.tools.spotify_tools import search_tracks, get_track_analysis
+from spotifai.models import DiscoveryResult
+
 
 @CrewBase
 class DiscoveryCrew():
@@ -34,18 +36,16 @@ class DiscoveryCrew():
         return Agent(
             config=self.agents_config['technical_analyst'], # type: ignore[index]
             verbose=True,
+            tools=[get_track_analysis],
             llm=self.llm_local
         )
 
     @task
     def search_tracks_task(self) -> Task:
         return Task(
-            config=self.tasks_config["search_tracks_task"],
+            config=self.tasks_config["search_tracks_task"], # type: ignore[index]
+            output_pydantic=DiscoveryResult,
         )
-
-    #@task
-    #def analyze_tracks_task(self) -> Task:
-    #    return Task(config=self.tasks_config["analyze_tracks_task"])
 
     @crew
     def crew(self) -> Crew:
@@ -55,4 +55,5 @@ class DiscoveryCrew():
             tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
+            tracing=False,
         )
