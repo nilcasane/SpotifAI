@@ -1,4 +1,5 @@
 import os
+import re
 import spotipy
 from dotenv import load_dotenv
 from crewai.tools import tool
@@ -64,10 +65,10 @@ def add_tracks_to_playlist(playlist_id: str, track_ids: str) -> str:
     """
     sp = get_spotify_client()
     
-    # Strip any extra text that the LLM might have included with the playlist ID
-    pid = playlist_id.replace("PLAYLIST_ID:", "").strip()
+    playlist_match = re.search(r"PLAYLIST_ID:\s*([A-Za-z0-9]+)", playlist_id)
+    pid = playlist_match.group(1) if playlist_match else playlist_id.strip()
 
-    ids = [tid.strip() for tid in track_ids.split(",") if tid.strip()]
+    ids = re.findall(r"[A-Za-z0-9]{10,}", track_ids)
     if ids:
         sp.playlist_add_items(pid, ids)
 

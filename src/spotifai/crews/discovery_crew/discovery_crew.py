@@ -25,7 +25,7 @@ class DiscoveryCrew():
             config=self.agents_config['music_searcher'], # type: ignore[index]
             verbose=True,
             tools=[search_tracks],
-            max_iter=1,
+            max_iter=2,
             llm=self.llm_local
         )
 
@@ -53,6 +53,6 @@ class DiscoveryCrew():
         return Crew(
             agents=self.agents,
             tasks=self.tasks,
-            process=Process.Sequential,
+            process=Process.sequential,
             verbose=True,
         )

@@ -1,6 +1,8 @@
 search_tracks_task:
   description: >
     The user request is: {user_request}
+    Previous feedback, if any: {previous_feedback}
+    Previously approved tracks, if any: {previous_tracks}
 
     You MUST search for songs that strictly match the user request above.
     If the user mentions an artist name (e.g. "Queen"), search ONLY for songs

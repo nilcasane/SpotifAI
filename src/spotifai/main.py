@@ -1,19 +1,10 @@
 #!/usr/bin/env python
-from pathlib import Path
 import json
 import sys
 
-from crewai.flow import Flow
-
 from spotifai.flows.spotifai_flow import SpotifAIFlow
 
-
-def kickoff(crewai_trigger_payload: dict | None = None):
-    """Instantiate and run the SpotifAI Flow.
-
-    If `crewai_trigger_payload` is provided it will be forwarded to the
-    Flow's @start() method (this matches the pattern used by CrewAI flows).
-    """
+def run_flow(crewai_trigger_payload: dict | None = None):
     flow = SpotifAIFlow()
     if crewai_trigger_payload:
         return flow.kickoff({"crewai_trigger_payload": crewai_trigger_payload})
@@ -21,11 +12,13 @@ def kickoff(crewai_trigger_payload: dict | None = None):
     # Default quick-run payload for local testing
     return flow.kickoff({"crewai_trigger_payload": {"user_request": "Queen"}})
 
+def kickoff(crewai_trigger_payload: dict | None = None):
+    """Console entry point used by `crewai run`."""
+    run_flow(crewai_trigger_payload)
 
 def plot():
     flow = SpotifAIFlow()
     flow.plot()
-
 
 def run_with_trigger():
     """Run the flow with a trigger payload passed on the command line.
@@ -40,8 +33,7 @@ def run_with_trigger():
     except json.JSONDecodeError:
         raise Exception("Invalid JSON payload provided as argument")
 
-    return kickoff(trigger_payload)
-
+    run_flow(trigger_payload)
 
 if __name__ == "__main__":
     kickoff()

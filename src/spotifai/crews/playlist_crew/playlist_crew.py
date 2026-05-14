@@ -1,7 +1,7 @@
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai.project import CrewBase, agent, crew, task
 from crewai.agents.agent_builder.base_agent import BaseAgent
-from spotifai.tools.spotify_tools import search_tracks, create_playlist, add_tracks_to_playlist
+from spotifai.tools.spotify_tools import create_playlist, add_tracks_to_playlist
 
 @CrewBase
 class PlaylistCrew():
@@ -49,7 +49,7 @@ class PlaylistCrew():
         return Crew(
             agents=self.agents,
             tasks=self.tasks,
-            process=Process.Sequential,
+            process=Process.sequential,
             verbose=True,
             tracing=True,
         )

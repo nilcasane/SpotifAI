@@ -1,10 +1,11 @@
 create_playlist_task:
   description: >
     Create an empty Spotify playlist using the "Create playlist on Spotify" tool.
+    Playlist name: {playlist_name}
     
     You MUST execute the tool exactly ONCE.
     Pass one parameter:
-      - name: a descriptive playlist name (plain text string)
+      - name: the exact playlist name above
     
     You will receive a PLAYLIST_ID. Return this PLAYLIST_ID as your final answer.
   expected_output: >
@@ -14,14 +15,13 @@ create_playlist_task:
 add_tracks_task:
   description: >
     Add tracks to the playlist created in the previous task.
+    Track IDs to add: {track_ids}
     
     Use the "Add tracks to playlist on Spotify" tool exactly ONCE.
     Pass two parameters:
       - playlist_id: the exact Playlist ID returned from the previous task.
-      - track_ids: all Spotify track IDs from the search task, separated by commas, no spaces.
+      - track_ids: the exact Track IDs to add above.
         Example: "6rqhFgbbKwnb9MLmUQDhG6,4u7EnebtB2gSQ7sXFoGx8V"
-    
-    Extract the track IDs from the initial search output.
   expected_output: >
     A summary of the songs added to the playlist.
   agent: playlist_manager
