@@ -35,25 +35,26 @@ plan_music_search_task:
     A MusicSearchPlan object with playlist_name, user_goal, target_tracks,
     genres, moods, keywords, search_queries, optional technical constraints,
     avoid, and explanation.
-  agent: music_query_planner
+  agent: query_interpreter
 
 search_tracks_task:
   description: >
-    Use the structured MusicSearchPlan produced in the previous task to guide your searches.
+    Use the structured MusicSearchPlan produced in the previous task to choose a plain text Spotify query.
 
-    Execute searches using the search_queries from the plan. Use the "Search tracks on Spotify" tool.
-    Tool inputs must always be plain text query strings, never JSON or structured objects.
+    Your first response must be a tool action using the "Search tracks on Spotify" tool.
+    Use this exact format:
 
-    Search enough candidates to return a DiscoveryResult. Only include track IDs returned by the tool.
-    Do not invent, modify, or add Spotify track IDs.
+    Thought: I need real Spotify track IDs from the Spotify API.
+    Action: Search tracks on Spotify
+    Action Input: {user_request}
 
-    Return a DiscoveryResult with status, playlist_name, and approved_tracks.
+    The tool returns the DiscoveryResult JSON directly from Spotify API results.
+    Return exactly the tool result. Do not write songs or spotify_id values yourself.
   expected_output: >
-    A DiscoveryResult with status, playlist_name, and approved_tracks list
-    where each song is represented as a TrackResult (spotify_id, name, and artist).
+    The exact DiscoveryResult JSON returned by the Search tracks on Spotify tool.
   agent: music_searcher
 
-technical_analyst_task:
+analyze_tracks_task:
   description: >
     Analyzes the technical characteristics of the songs found by the music_searcher agent.
     Filters out songs that do not meet the user's criteria.

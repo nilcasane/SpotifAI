@@ -1,10 +1,9 @@
 import os
-import re
 import spotipy
 from dotenv import load_dotenv
 from crewai.tools import tool
 from spotipy.oauth2 import SpotifyOAuth
-from spotifai.models import PlaylistResult
+from spotifai.models import DiscoveryResult, PlaylistResult, TrackResult
 
 load_dotenv()
 
@@ -14,27 +13,71 @@ def get_spotify_client():
             client_id=os.getenv("SPOTIFY_CLIENT_ID"),
             client_secret=os.getenv("SPOTIFY_CLIENT_SECRET"),
             redirect_uri=os.getenv("SPOTIFY_REDIRECT_URI"),
-            scope="playlist-modify-private playlist-modify-public"
+            scope="playlist-modify-private playlist-modify-public playlist-read-private"
         )
     )
 
-@tool("Search tracks on Spotify")
+
+def _clean_track_ids(track_ids: str) -> list[str]:
+    ids = []
+    for track_id in track_ids.split(","):
+        cleaned = track_id.strip().removeprefix("spotify:track:")
+        if "/track/" in cleaned:
+            cleaned = cleaned.split("/track/", 1)[1].split("?", 1)[0]
+        if len(cleaned) == 22 and cleaned.isalnum() and cleaned not in ids:
+            ids.append(cleaned)
+    return ids
+
+
+def search_spotify_tracks(
+    queries: list[str],
+    playlist_name: str,
+    excluded_ids: set[str] | None = None,
+) -> DiscoveryResult:
+    sp = get_spotify_client()
+    approved_tracks = []
+    seen = set(excluded_ids or set())
+
+    for query in queries:
+        results = sp.search(q=query, type="track", limit=10)
+        tracks = results.get("tracks", {}).get("items", [])
+        for track in tracks:
+            spotify_id = track["id"]
+            if spotify_id in seen:
+                continue
+
+            seen.add(spotify_id)
+            artist_names = ", ".join(artist["name"] for artist in track["artists"])
+            approved_tracks.append(
+                TrackResult(
+                    spotify_id=spotify_id,
+                    name=track["name"],
+                    artist=artist_names,
+                )
+            )
+
+            if len(approved_tracks) >= 20:
+                break
+
+        if len(approved_tracks) >= 20:
+            break
+
+    return DiscoveryResult(
+        status="READY" if approved_tracks else "NO_TRACKS",
+        playlist_name=playlist_name,
+        approved_tracks=approved_tracks,
+    )
+
+
+@tool("Search tracks on Spotify", result_as_answer=True)
 def search_tracks(query: str) -> str:
     """
     Search for tracks on Spotify.
     The 'query' parameter must be a plain text search string (NOT JSON).
-    Use natural keywords like genre, artist, mood, or decade.
+    Returns a JSON DiscoveryResult built only from Spotify API results.
     """
-    sp = get_spotify_client()
-    results = sp.search(q=query, type="track", limit=20)
-    tracks = results.get("tracks", {}).get("items", [])
-    output = []
-    for t in tracks:
-        artist_names = ", ".join(a["name"] for a in t["artists"])
-        output.append(
-            f"- {t['name']} by {artist_names} (ID: {t['id']})"
-        )
-    return "\n".join(output) if output else "No tracks found."
+    playlist_name = query.strip().title() or "SpotifAI Playlist"
+    return search_spotify_tracks([query], playlist_name).model_dump_json()
 
 @tool("Get track audio features on Spotify")
 def get_track_analysis(track_id: str) -> str:
@@ -60,53 +103,58 @@ def get_track_analysis(track_id: str) -> str:
         f"- Speechiness: {features['speechiness']}"
     )
 
-@tool("Create playlist on Spotify")
-def create_playlist(name: str = "SpotifAI Playlist") -> PlaylistResult:
+@tool("create_playlist_on_spotify", result_as_answer=True)
+def create_playlist(name: str = "SpotifAI Playlist") -> str:
     """
-    Creates a Spotify playlist. Run this ONLY ONCE.
-    The 'name' parameter is the playlist name (plain text string). Optional.
-    Returns a PlaylistResult directly.
+    Creates a Spotify playlist.
+    The 'name' parameter is the playlist name (plain text string).
+    Returns a JSON PlaylistResult produced by Spotify.
     """
-    sp = get_spotify_client()
+    try:
+        sp = get_spotify_client()
+        playlist = sp._post(
+            "me/playlists",
+            payload={
+                "name": name,
+                "public": True,
+                "description": "Playlist generada automaticament per SpotifAI",
+            },
+        )
 
-    # Use /me/playlists endpoint
-    playlist = sp._post("me/playlists", payload={
-        "name": name,
-        "public": True,
-        "description": "Playlist generada automaticament per SpotifAI"
-    })
+        result = PlaylistResult(
+            status="DONE",
+            playlist_id=playlist["id"],
+            playlist_url=playlist["external_urls"]["spotify"],
+            tracks_added=0,
+        )
+    except Exception:
+        result = PlaylistResult(status="FAILED")
 
-    playlist_id = playlist["id"]
-    playlist_url = playlist["external_urls"]["spotify"]
-    if not playlist_id or not playlist_url:
-        return PlaylistResult(status="FAILED")
+    return result.model_dump_json()
 
-    return PlaylistResult(
-        status="DONE",
-        playlist_id=playlist_id,
-        playlist_url=playlist_url,
-        tracks_added=0,
-    )
-
-@tool("Add tracks to playlist on Spotify")
-def add_tracks_to_playlist(playlist_id: str, track_ids: str) -> PlaylistResult:
+@tool("add_tracks_to_playlist_on_spotify", result_as_answer=True)
+def add_tracks_to_playlist(playlist_id: str, track_ids: str) -> str:
     """
     Adds tracks to an existing Spotify playlist.
-    The 'playlist_id' parameter is the ID returned by the 'Create playlist on Spotify' tool.
+    The 'playlist_id' parameter is the ID returned by the create playlist tool.
     The 'track_ids' parameter is a comma-separated string of Spotify track IDs.
-    Returns a PlaylistResult directly.
+    Returns a JSON PlaylistResult produced by Spotify.
     """
     pid = playlist_id.strip()
-    ids = [
-        track_id.strip()
-        for track_id in track_ids.split(",")
-        if len(track_id.strip()) == 22 and track_id.strip().isalnum()
-    ]
-
-    if not pid or not ids:
-        return PlaylistResult(status="FAILED", playlist_id=pid or None)
+    ids = _clean_track_ids(track_ids)
 
     sp = get_spotify_client()
-    sp.playlist_add_items(pid, ids)
+    before = sp.playlist_items(pid, fields="total", limit=1)["total"]
+    uris = [f"spotify:track:{track_id}" for track_id in ids]
+    sp._post(f"playlists/{pid}/items", payload={"uris": uris, "position": 0})
+    after = sp.playlist_items(pid, fields="total", limit=1)["total"]
+    tracks_added = max(0, after - before)
 
-    return PlaylistResult(status="DONE", playlist_id=pid, tracks_added=len(ids))
+    result = PlaylistResult(
+        status="DONE" if tracks_added else "FAILED",
+        playlist_id=pid or None,
+        playlist_url=f"https://open.spotify.com/playlist/{pid}" if pid else None,
+        tracks_added=tracks_added,
+    )
+
+    return result.model_dump_json()

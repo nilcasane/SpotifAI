@@ -5,6 +5,7 @@ from crewai.flow.flow import Flow, start, listen, router
 from spotifai.crews.discovery_crew import DiscoveryCrew
 from spotifai.crews.playlist_crew import PlaylistCrew
 from spotifai.models import DiscoveryResult, PlaylistResult
+from spotifai.tools.spotify_tools import search_spotify_tracks
 
 class SpotifAIState(BaseModel):
     user_request: str = ""
@@ -39,7 +40,11 @@ class SpotifAIFlow(Flow[SpotifAIState]):
             }
         )
 
-        discovery: DiscoveryResult = result.pydantic
+        plan = result.tasks_output[0].pydantic
+        discovery = search_spotify_tracks(
+            plan.search_queries or [self.state.user_request],
+            plan.playlist_name,
+        )
         self.state.discovery_result = discovery
 
         return discovery
@@ -71,7 +76,13 @@ class SpotifAIFlow(Flow[SpotifAIState]):
             }
         )
 
-        discovery: DiscoveryResult = result.pydantic
+        previous_ids = {track.spotify_id for track in previous.approved_tracks}
+        plan = result.tasks_output[0].pydantic
+        discovery = search_spotify_tracks(
+            plan.search_queries or [user_request],
+            plan.playlist_name,
+            previous_ids,
+        )
         self.state.discovery_result = discovery
 
         return discovery
@@ -88,23 +99,75 @@ class SpotifAIFlow(Flow[SpotifAIState]):
     @listen("playlist_ready")
     def create_playlist(self):
         discovery: DiscoveryResult = self.state.discovery_result
+        target_tracks = 20
 
-        #playlist_name = self._playlist_name(discovery)
-        playlist_name = "SpotifAI Playlist"
-        track_ids = [track.spotify_id for track in discovery.approved_tracks]
-
+        playlist_name = discovery.playlist_name
         result = PlaylistCrew().crew().kickoff(
             inputs={
                 "playlist_name": playlist_name,
-                "track_ids": track_ids,
             }
         )
+        playlist_result = PlaylistResult.model_validate_json(result.raw)
 
-        playlist_result: PlaylistResult = result.pydantic
+        if playlist_result.status != "DONE" or not playlist_result.playlist_id:
+            self.state.playlist_result = playlist_result
+            self.state.status = playlist_result.status
+            self.state.error = "Spotify did not create the playlist."
+            return playlist_result
+
+        playlist_id = playlist_result.playlist_id
+        playlist_url = playlist_result.playlist_url
+        total_added = 0
+        seen_track_ids: set[str] = set()
+        current_discovery = discovery
+
+        for _ in range(5):
+            track_ids = [
+                track.spotify_id
+                for track in current_discovery.approved_tracks
+                if track.spotify_id not in seen_track_ids
+            ]
+            seen_track_ids.update(track_ids)
+
+            if track_ids:
+                add_result = PlaylistCrew().add_tracks_crew().kickoff(
+                    inputs={
+                        "playlist_id": playlist_id,
+                        "track_ids": ",".join(track_ids),
+                    }
+                )
+                added = PlaylistResult.model_validate_json(add_result.raw)
+                if added.status == "DONE":
+                    total_added += added.tracks_added
+
+            if total_added >= target_tracks:
+                break
+
+            retry = DiscoveryCrew().crew().kickoff(
+                inputs={
+                    "user_request": self.state.user_request,
+                    "previous_feedback": f"Need {target_tracks - total_added} more different tracks.",
+                    "previous_tracks": list(seen_track_ids),
+                }
+            )
+            plan = retry.tasks_output[0].pydantic
+            current_discovery = search_spotify_tracks(
+                plan.search_queries or [self.state.user_request],
+                playlist_name,
+                seen_track_ids,
+            )
+            self.state.discovery_result = current_discovery
+
+        playlist_result = PlaylistResult(
+            status="DONE" if total_added >= target_tracks else "FAILED",
+            playlist_id=playlist_id,
+            playlist_url=playlist_url,
+            tracks_added=total_added,
+        )
         self.state.playlist_result = playlist_result
         self.state.status = playlist_result.status
         if playlist_result.status != "DONE":
-            self.state.error = "Spotify did not add any tracks to the playlist."
+            self.state.error = f"Spotify only added {total_added}/{target_tracks} tracks."
 
         return playlist_result
 

@@ -5,5 +5,8 @@ playlist_manager:
     Create the final playlist on Spotify with the songs and return
     a clear summary with the playlist URL and the added songs.
   backstory: >
-    You are responsible for creating a coherent Spotify playlist and
+    You are responsible for creating a Spotify playlist and
     returning a clear summary with the added songs.
+    You never invent playlist IDs, URLs, or success statuses.
+    Your job is to execute the available Spotify tools using Thought, Action,
+    and Action Input. A Final Answer is only allowed after a tool Observation.

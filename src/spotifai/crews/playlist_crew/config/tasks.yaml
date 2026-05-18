@@ -1,19 +1,30 @@
 create_playlist_task:
   description: >
     Create a Spotify playlist with the name: {playlist_name}.
-    You MUST use the "Create playlist on Spotify" tool exactly once.
-    The tool returns a PlaylistResult directly.
+    Your entire first response must be exactly this tool call, with no Final Answer:
+
+    Thought: I need to create the playlist with Spotify.
+    Action: create_playlist_on_spotify
+    Action Input: {"name": "{playlist_name}"}
+
+    Do not write status, playlist_id, playlist_url, or JSON yourself.
+    The tool result is the answer.
   expected_output: >
-    The PlaylistResult with status, playlist_id, and playlist_url returned by the tool.
+    The exact output returned by create_playlist_on_spotify.
   agent: playlist_manager
 
 add_tracks_task:
   description: >
-    You will receive a PlaylistResult from the previous task, which includes the playlist_id and playlist_url.
-    Add to the playlist the following tracks: {track_ids}
-    You MUST use the "Add tracks to playlist on Spotify" tool exactly once, but only if the previous
-    task returned a valid playlist_id. The tool returns a PlaylistResult directly.
-    If the previous task returned FAILED or if playlist_id is missing, return status FAILED without calling the tool.
+    Add tracks to the existing Spotify playlist with ID: {playlist_id}.
+    Add these tracks: {track_ids}
+    Your entire first response must be exactly this tool call, with no Final Answer:
+
+    Thought: I need to add the tracks to the Spotify playlist.
+    Action: add_tracks_to_playlist_on_spotify
+    Action Input: {"playlist_id": "{playlist_id}", "track_ids": "{track_ids}"}
+
+    Do not write status, playlist_id, playlist_url, tracks_added, or JSON yourself.
+    The tool result is the answer.
   expected_output: >
-    A PlaylistResult with status, playlist_id, playlist_url, and the number of tracks added.
+    The exact output returned by add_tracks_to_playlist_on_spotify.
   agent: playlist_manager

@@ -18,7 +18,8 @@ class DiscoveryCrew():
     llm_local = LLM(
         model="ollama/llama3.2",
         base_url="http://localhost:11434",
-        timeout=120
+        timeout=120,
+        temperature=0,
     )
 
     @agent
@@ -26,7 +27,6 @@ class DiscoveryCrew():
         return Agent(
             config=self.agents_config["query_interpreter"], # type: ignore[index]
             verbose=True,
-            tools=[],
             max_iter=2,
             allow_delegation=False,
             llm=self.llm_local,
@@ -35,20 +35,23 @@ class DiscoveryCrew():
     @agent
     def music_searcher(self) -> Agent:
         return Agent(
-            config=self.agents_config['music_searcher'], # type: ignore[index]
+            config=self.agents_config["music_searcher"], # type: ignore[index]
             verbose=True,
             tools=[search_tracks],
-            max_iter=2,
-            llm=self.llm_local
+            max_iter=4,
+            max_retry_limit=3,
+            allow_delegation=False,
+            llm=self.llm_local,
+            cache=False,
         )
 
     @agent
     def technical_analyst(self) -> Agent:
         return Agent(
-            config=self.agents_config['technical_analyst'], # type: ignore[index]
+            config=self.agents_config["technical_analyst"], # type: ignore[index]
             verbose=True,
             tools=[get_track_analysis],
-            llm=self.llm_local
+            llm=self.llm_local,
         )
 
     @task
@@ -63,15 +66,24 @@ class DiscoveryCrew():
         return Task(
             config=self.tasks_config["search_tracks_task"], # type: ignore[index]
             context=[self.plan_music_search_task()],
+            tools=[search_tracks],
             output_pydantic=DiscoveryResult,
+        )
+    
+    @task
+    def analyze_tracks_task(self) -> Task:
+        return Task(
+            config=self.tasks_config["analyze_tracks_task"], # type: ignore[index]
+            context=[self.search_tracks_task()],
+            tools=[get_track_analysis],
         )
 
     @crew
     def crew(self) -> Crew:
         """Creates the Discovery crew"""
         return Crew(
-            agents=self.agents,
-            tasks=self.tasks,
+            agents=[self.query_interpreter(), self.music_searcher()],
+            tasks=[self.plan_music_search_task(), self.search_tracks_task()],
             process=Process.sequential,
             verbose=True,
             tracing=False,
