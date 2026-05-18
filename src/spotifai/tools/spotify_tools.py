@@ -79,30 +79,6 @@ def search_tracks(query: str) -> str:
     playlist_name = query.strip().title() or "SpotifAI Playlist"
     return search_spotify_tracks([query], playlist_name).model_dump_json()
 
-@tool("Get track audio features on Spotify")
-def get_track_analysis(track_id: str) -> str:
-    """
-    Get audio features for a Spotify track.
-    The 'track_id' parameter is the Spotify track ID (NOT a URL).
-    Example: "6rqhFgbbKwnb9MLmUQDhG6"
-    """
-    sp = get_spotify_client()
-    features = sp.audio_features([track_id])[0]
-    if not features:
-        return "Track not found or no audio features available."
-
-    return (
-        f"Audio features for track ID {track_id}:\n"
-        f"- Danceability: {features['danceability']}\n"
-        f"- Energy: {features['energy']}\n"
-        f"- Tempo: {features['tempo']} BPM\n"
-        f"- Valence: {features['valence']}\n"
-        f"- Acousticness: {features['acousticness']}\n"
-        f"- Instrumentalness: {features['instrumentalness']}\n"
-        f"- Liveness: {features['liveness']}\n"
-        f"- Speechiness: {features['speechiness']}"
-    )
-
 @tool("create_playlist_on_spotify", result_as_answer=True)
 def create_playlist(name: str = "SpotifAI Playlist") -> str:
     """
@@ -110,25 +86,19 @@ def create_playlist(name: str = "SpotifAI Playlist") -> str:
     The 'name' parameter is the playlist name (plain text string).
     Returns a JSON PlaylistResult produced by Spotify.
     """
-    try:
-        sp = get_spotify_client()
-        playlist = sp._post(
-            "me/playlists",
-            payload={
-                "name": name,
-                "public": True,
-                "description": "Playlist generada automaticament per SpotifAI",
-            },
-        )
+    sp = get_spotify_client()
+    playlist = sp._post("me/playlists", payload={
+        "name": name,
+        "public": True,
+        "description": "Playlist generada automaticament per SpotifAI",
+    },)
 
-        result = PlaylistResult(
-            status="DONE",
-            playlist_id=playlist["id"],
-            playlist_url=playlist["external_urls"]["spotify"],
-            tracks_added=0,
-        )
-    except Exception:
-        result = PlaylistResult(status="FAILED")
+    result = PlaylistResult(
+        status="DONE" if playlist and "id" in playlist else "FAILED",
+        playlist_id=playlist["id"],
+        playlist_url=playlist["external_urls"]["spotify"],
+        tracks_added=0,
+    )
 
     return result.model_dump_json()
 

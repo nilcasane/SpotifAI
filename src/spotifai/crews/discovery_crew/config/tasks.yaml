@@ -1,7 +1,6 @@
 plan_music_search_task:
   description: >
     Analyze the following user request:
-
     "{user_request}"
 
     Previous feedback from earlier attempts, if any:
@@ -18,7 +17,10 @@ plan_music_search_task:
     3. Determine the target number of songs. If the user does not specify a number, use 20.
     4. Infer relevant genres.
     5. Infer moods and energy level.
-    6. Infer BPM, energy or valence constraints only if they are clearly implied.
+    6. Infer BPM, energy and valence constraints when the user implies a common listening context.
+       For relaxing, study, focus, calm, ambient, or sleep requests, set a low/medium BPM range
+       and low energy range instead of leaving all constraint fields empty.
+       For workout, running, party, dance, or energetic requests, set higher BPM and energy ranges.
     7. Generate multiple concrete plain-text Spotify search queries.
     8. If previous feedback exists, improve the search strategy instead of repeating the same queries.
 
@@ -53,11 +55,3 @@ search_tracks_task:
   expected_output: >
     The exact DiscoveryResult JSON returned by the Search tracks on Spotify tool.
   agent: music_searcher
-
-analyze_tracks_task:
-  description: >
-    Analyzes the technical characteristics of the songs found by the music_searcher agent.
-    Filters out songs that do not meet the user's criteria.
-  expected_output: >
-    A list of songs that meet the user's criteria.
-  agent: technical_analyst

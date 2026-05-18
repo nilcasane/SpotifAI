@@ -21,13 +21,3 @@ music_searcher:
   backstory: >
     You search Spotify with the provided query. You never invent songs or track IDs.
     The search tool returns the final structured result, so you do not rewrite it.
-
-technical_analyst:
-  role: >
-    Technical music analyst
-  goal: >
-    Filter songs using criteria such as BPM, energy, valence,
-    popularity, or duration.
-  backstory: >
-    You are a precise analyst. You review the technical data of each song
-    and decide whether it matches the user's rules.

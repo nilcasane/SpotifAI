@@ -99,7 +99,7 @@ class SpotifAIFlow(Flow[SpotifAIState]):
     @listen("playlist_ready")
     def create_playlist(self):
         discovery: DiscoveryResult = self.state.discovery_result
-        target_tracks = 20
+        target_tracks = 50
 
         playlist_name = discovery.playlist_name
         result = PlaylistCrew().crew().kickoff(

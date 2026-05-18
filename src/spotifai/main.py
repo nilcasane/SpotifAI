@@ -9,8 +9,11 @@ def run_flow(crewai_trigger_payload: dict | None = None):
     if crewai_trigger_payload:
         return flow.kickoff({"crewai_trigger_payload": crewai_trigger_payload})
 
-    # Default quick-run payload for local testing
-    return flow.kickoff({"crewai_trigger_payload": {"user_request": "Alternative Rock"}})
+    user_request = input("Quina playlist vols crear? ").strip()
+    if not user_request:
+        raise ValueError("No has escrit cap peticio de playlist.")
+
+    return flow.kickoff({"crewai_trigger_payload": {"user_request": user_request}})
 
 def kickoff(crewai_trigger_payload: dict | None = None):
     """Console entry point used by `crewai run`."""
